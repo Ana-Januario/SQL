@@ -1,0 +1,73 @@
+--análise exploratória em BigQuery--
+
+select * from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+limit 100
+
+--assim é possivel visualizar a estrutura da tabela e perceber as colunas--
+
+--fazemos algumas verificações de valores omissos, numero distinto de paises e verificação de valores nulos na mterica de interesse--
+select
+     count(*) as N_linhas
+,    count(iso3_country) as Contagem_linhas_nao_nulos
+,    count(distinct iso3_country) as paises_distintos
+,    max(length(iso3_country)) as comprimento_max
+,    min(length(iso3_country)) as comprimento_minimo
+,    count(emissions_quantity) as emissao_nao_nulas
+,    count(gas) as gases_nao_nulos
+,    count(distinct gas) as tipos_distintos_de_gases
+from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+
+--verificação de valores estatisticos da coluna numerica de interesse--
+
+select    count(*) as row_count
+,    count(emissions_quantity) as emissao_nao_nulas
+,    count(distinct emissions_quantity) as emissao_distintas
+,    sum(if(emissions_quantity = 0, 1, 0))  as conta_zero
+,    sum(if(emissions_quantity < 0, 1, 0)) as conta_negativo
+,    avg(emissions_quantity) as media
+,    min(emissions_quantity) as minimo
+,    max(emissions_quantity) as maximo
+,    stddev(emissions_quantity) as desvio_padrao
+,    approx_quantiles(emissions_quantity, 4)
+from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+
+
+--verificação dos Top10 países com maior emissão na mineração de carvão--
+
+select iso3_country, sum(emissions_quantity) from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+group by iso3_country
+order by sum(emissions_quantity) desc
+limit 10 
+
+--verificação dos top10 paises com maior emissão de metano na mineração de carvão--
+
+select iso3_country, sum(emissions_quantity) from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+where gas='ch4'
+group by iso3_country
+order by sum(emissions_quantity) desc
+limit 10 
+
+--gás carbonico--
+
+select iso3_country, sum(emissions_quantity) from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+where gas='co2'
+group by iso3_country
+order by sum(emissions_quantity) desc
+limit 10 
+
+--A China tá sempre em primeiro--
+
+--Vamos verificar ao longo dos anos.--
+
+--Verificamos que o ano de 2021 foi o ano de maior emissão na mineração de carvão com 608504114.78200006 toneladas, --
+--seguido do ano de 2015 com 601346090.16700017.--
+
+select ano, sum(emission)
+from
+(select extract(year from start_time) as ano, iso3_country, sum(emissions_quantity) as emission from pivotal-cursor-342515.conjunto.coal_mining_emission_country
+where gas='co2'
+group by iso3_country, ano) as tb
+group by ano
+order by sum(emission) desc
+
+--considerando o ano de 2021 a China sozinha emitiu 286425560.0 toneladas o que corresponde a 47% da emissão total de gases na mineração de carvão. --
