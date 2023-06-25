@@ -1,5 +1,5 @@
 # SQL
 
-Exemplos de trabalhos que posso fazer em SQL.
+Exemplos de trabalhos em SQL.
 
-No caso acima, utilizamos a ferramenta BigQuery. 
+No caso acima, utilizamos a ferramenta BigQuery, mas também tenho experiencia em outras databases e outros IDEs. 
